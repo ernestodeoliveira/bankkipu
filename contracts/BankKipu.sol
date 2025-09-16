@@ -168,6 +168,28 @@ contract KipuBank {
     }
 
     /*//////////////////////////////////////////////////////////////
+                            FALLBACK FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+    
+    /**
+     * @notice Fallback function to handle direct ETH transfers
+     * @dev Redirects to deposit() function when ETH is sent directly to contract
+     */
+    fallback() external payable {
+        // Redirect to deposit function
+        this.deposit{value: msg.value}();
+    }
+    
+    /**
+     * @notice Receive function to handle plain ETH transfers
+     * @dev Called when msg.data is empty
+     */
+    receive() external payable {
+        // Redirect to deposit function
+        this.deposit{value: msg.value}();
+    }
+
+    /*//////////////////////////////////////////////////////////////
                             PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     
@@ -188,11 +210,20 @@ contract KipuBank {
     //////////////////////////////////////////////////////////////*/
     
     /**
-     * @notice Returns user balance
-     * @param user User address
+     * @notice Returns caller's own balance
      * @return Balance in wei
+     * @dev Only allows users to check their own balance for privacy
      */
-    function getUserBalance(address user) external view returns (uint256) {
-        return s_balances[user];
+    function getMyBalance() external view returns (uint256) {
+        return s_balances[msg.sender];
+    }
+    
+    /**
+     * @notice Returns the remaining capacity for new deposits
+     * @return The amount of ETH that can still be deposited
+     * @dev Useful for frontend applications to show available capacity
+     */
+    function getRemainingCapacity() external view returns (uint256) {
+        return BANK_CAP - totalDeposits;
     }
 }

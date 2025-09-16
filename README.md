@@ -10,6 +10,8 @@
 - **Global Limit**: Maximum total bank capacity set at deployment
 - **Per-Transaction Limit**: Maximum amount that can be withdrawn per transaction
 - **Advanced Security**: Implements CEI (Checks-Effects-Interactions) pattern
+- **Fallback Functions**: Automatic deposit when ETH is sent directly to contract
+- **Privacy Protection**: Users can only check their own balance
 - **Detailed Events**: Complete tracking of all operations
 - **Complete Metrics**: Global and per-user statistics
 
@@ -20,6 +22,8 @@
 - ✅ Reentrancy protection
 - ✅ Secure ETH transfers with `call()`
 - ✅ CEI pattern implementation
+- ✅ Fallback and receive functions for direct ETH transfers
+- ✅ Privacy-first balance queries
 
 ## 🚀 Deployment with Remix IDE
 
@@ -71,6 +75,7 @@
 
 ### 💰 Making Deposits
 
+#### Method 1: Using deposit() function
 1. **Locate the Contract**
    - After deployment, find your contract in the "Deployed Contracts" section
    - Expand the contract to see available functions
@@ -84,6 +89,11 @@
    - Click the orange **"deposit"** button
    - Confirm the transaction in MetaMask
    - Wait for transaction confirmation
+
+#### Method 2: Direct ETH Transfer
+- Simply send ETH directly to the contract address
+- The fallback/receive functions will automatically process it as a deposit
+- Same validations and limits apply
 
 ### 💸 Making Withdrawals
 
@@ -103,10 +113,14 @@
 ### 📊 Querying Contract State
 
 #### Check Your Balance
-1. Find the **"getUserBalance"** function
-2. Enter your wallet address in the input field
-3. Click the blue **"getUserBalance"** button
-4. Result shows your balance in wei
+1. Find the **"getMyBalance"** function
+2. Click the blue **"getMyBalance"** button (no parameters needed)
+3. Result shows your balance in wei
+
+#### Check Remaining Bank Capacity
+1. Find the **"getRemainingCapacity"** function
+2. Click the blue **"getRemainingCapacity"** button
+3. Result shows how much ETH can still be deposited (in wei)
 
 #### Check Contract Statistics
 - **"totalDeposits"**: Click to see total ETH deposited (in wei)
@@ -114,6 +128,7 @@
 - **"withdrawalCount"**: Click to see number of withdrawals made
 - **"BANK_CAP"**: Click to see maximum bank capacity (in wei)
 - **"WITHDRAWAL_LIMIT"**: Click to see withdrawal limit per transaction (in wei)
+- **"getRemainingCapacity"**: Click to see remaining deposit capacity (in wei)
 
 #### Converting Wei to ETH
 - Divide the wei amount by 1,000,000,000,000,000,000 (18 zeros)
@@ -127,7 +142,10 @@
 |----------|------|-------------|
 | `deposit()` | payable | Deposits ETH to personal vault |
 | `withdraw(uint256)` | external | Withdraws ETH from personal vault |
-| `getUserBalance(address)` | view | Returns user's balance |
+| `getMyBalance()` | view | Returns caller's own balance |
+| `getRemainingCapacity()` | view | Returns remaining deposit capacity |
+| `fallback()` | payable | Handles direct ETH transfers |
+| `receive()` | payable | Handles plain ETH transfers |
 
 ### Public Variables
 
@@ -179,21 +197,24 @@
 
 2. **Test Deposits**
    - Set VALUE to `0.5` Ether and call `deposit()`
-   - Check your balance with `getUserBalance(your_address)`
+   - Check your balance with `getMyBalance()`
    - Verify `totalDeposits` increased
    - Verify `depositCount` increased
+   - Test direct ETH transfer to contract address
 
 3. **Test Withdrawals**
    - Try withdrawing `500000000000000000` wei (0.5 ETH)
-   - Check your balance decreased
+   - Check your balance decreased with `getMyBalance()`
    - Verify `totalDeposits` decreased
    - Verify `withdrawalCount` increased
+   - Check `getRemainingCapacity()` increased
 
 4. **Test Limits**
    - Try withdrawing more than the limit (e.g., `1500000000000000000` wei)
    - Should fail with `ExceedsWithdrawalLimit` error
-   - Try depositing more than remaining bank capacity
+   - Try depositing more than `getRemainingCapacity()` shows
    - Should fail with `ExceedsBankCap` error
+   - Test both direct transfer and deposit() function limits
 
 5. **Test Edge Cases**
    - Try depositing 0 ETH (should fail with `NoValueSent`)
